@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anotador de Truco - Buenas Arriba / Malas Abajo</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .truco-container {
+            background-color: #0b0b0b;
+            border: 4px solid #333333;
+            border-radius: 10px;
+            padding: 20px;
+            width: 320px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            user-select: none;
+        }
+
+        .truco-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .team-column {
+            text-align: center;
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .score-phase {
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .limit-indicator {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff66;
+            padding: 0 10px;
+        }
+
+        /* PIZARRA DIVIDIDA EN ARRIBA (BUENAS) Y ABAJO (MALAS) */
+        .board {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: 380px;
+            border-bottom: 2px solid #333;
+            margin-bottom: 15px;
+        }
+
+        /* Línea horizontal central */
+        .horizontal-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: #444;
+            z-index: 1;
+        }
+
+        /* Filas de la pizarra */
+        .section-row {
+            height: 50%;
+            display: flex;
+            position: relative;
+        }
+
+        /* Línea vertical central */
+        .section-row::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #444;
+            z-index: 1;
+        }
+
+        .team-sub-board {
+            width: 50%;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 12px;
+            box-sizing: border-box;
+            align-content: center;
+            justify-items: center;
+            z-index: 2;
+        }
+
+        /* BOTONES DE CONTROL */
+        .truco-controls {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .btn-truco {
+            background-color: #222;
+            border: 2px solid #444;
+            color: white;
+            padding: 12px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .btn-truco:active {
+            transform: scale(0.95);
+        }
+
+        .btn-plus-nos { border-color: #00ff66; color: #00ff66; }
+        .btn-plus-ell { border-color: #ff3333; color: #ff3333; }
+        .btn-reset { max-width: 50px; font-size: 16px; color: #aaa; }
+
+        /* ESTILOS DE LOS FÓSFOROS */
+        .matchstick {
+            stroke: #b58259;
+            stroke-width: 4;
+            stroke-linecap: round;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .matchstick-head {
+            fill: #ff2200;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="truco-container">
+        
+        <div class="truco-header">
+            <div class="team-column">
+                <div class="team-name">Nosotros</div>
+                <div id="phase-nos" class="score-phase">0 Buenas</div>
+            </div>
+            <div class="limit-indicator">30</div>
+            <div class="team-column">
+                <div class="team-name">Ellos</div>
+                <div id="phase-ell" class="score-phase">0 Buenas</div>
+            </div>
+        </div>
+
+        <div class="board">
+            <div class="horizontal-line"></div>
+            
+            <div class="section-row">
+                <div id="buenas-nos" class="team-sub-board"></div>
+                <div id="buenas-ell" class="team-sub-board"></div>
+            </div>
+
+            <div class="section-row">
+                <div id="malas-nos" class="team-sub-board"></div>
+                <div id="malas-ell" class="team-sub-board"></div>
+            </div>
+        </div>
+
+        <div class="truco-controls">
+            <button class="btn-truco btn-plus-nos" onclick="modificarPuntos('nos', 1)">+ Nos</button>
+            <button class="btn-truco btn-reset" onclick="reiniciar()"><span style="transform: scaleX(-1); display:inline-block;">↻</span></button>
+            <button class="btn-truco" onclick="modificarPuntos('nos', -1)">-</button>
+            <button class="btn-truco" onclick="modificarPuntos('ell', -1)">-</button>
+            <button class="btn-truco btn-plus-ell" onclick="modificarPuntos('ell', 1)">+ Ellos</button>
+        </div>
+
+    </div>
+
+    <script>
+        let puntajes = { nos: 0, ell: 0 };
+
+        // Plantilla geométrica para cada caja de 5 fósforos
+        const plantillaFosforos = `
+            <svg width="50" height="50" viewBox="0 0 60 60">
+                <line class="matchstick" x1="5" y1="5" x2="45" y2="5" />
+                <circle class="matchstick-head" cx="5" cy="5" r="3.5" />
+                
+                <line class="matchstick" x1="5" y1="8" x2="5" y2="48" />
+                <circle class="matchstick-head" cx="5" cy="48" r="3.5" />
+                
+                <line class="matchstick" x1="8" y1="48" x2="48" y2="48" />
+                <circle class="matchstick-head" cx="48" cy="48" r="3.5" />
+                
+                <line class="matchstick" x1="48" y1="5" x2="48" y2="45" />
+                <circle class="matchstick-head" cx="48" cy="5" r="3.5" />
+                
+                <line class="matchstick" x1="8" y1="8" x2="42" y2="42" />
+                <circle class="matchstick-head" cx="8" cy="8" r="3.5" />
+            </svg>
+        `;
+
+        function inicializarTableros() {
+            ['nos', 'ell'].forEach(equipo => {
+                const contenedorBuenas = document.getElementById(`buenas-${equipo}`);
+                const contenedorMalas = document.getElementById(`malas-${equipo}`);
+                
+                contenedorBuenas.innerHTML = '';
+                contenedorMalas.innerHTML = '';
+                
+                // 3 bloques arriba y 3 bloques abajo para cada equipo
+                for(let i = 0; i < 3; i++) {
+                    contenedorBuenas.insertAdjacentHTML('beforeend', plantillaFosforos);
+                    contenedorMalas.insertAdjacentHTML('beforeend', plantillaFosforos);
+                }
+            });
+        }
+
+        function actualizarPizarra(equipo) {
+            const puntos = puntajes[equipo];
+            
+            const gridBuenas = document.getElementById(`buenas-${equipo}`);
+            const gridMalas = document.getElementById(`malas-${equipo}`);
+            
+            const lineasBuenas = gridBuenas.querySelectorAll('.matchstick');
+            const cabezasBuenas = gridBuenas.querySelectorAll('.matchstick-head');
+            
+            const lineasMalas = gridMalas.querySelectorAll('.matchstick');
+            const cabezasMalas = gridMalas.querySelectorAll('.matchstick-head');
+
+            // 1. Renderizar BUENAS (Puntos 1 al 15 -> Cuadrantes Superiores)
+            for (let i = 0; i < 15; i++) {
+                if (i < puntos) {
+                    lineasBuenas[i].classList.add('active');
+                    cabezasBuenas[i].classList.add('active');
+                } else {
+                    lineasBuenas[i].classList.remove('active');
+                    cabezasBuenas[i].classList.remove('active');
+                }
+            }
+
+            // 2. Renderizar MALAS (Puntos 16 al 30 -> Cuadrantes Inferiores)
+            for (let i = 0; i < 15; i++) {
+                const puntoActualMalas = i + 15; 
+                if (puntoActualMalas < puntos) {
+                    lineasMalas[i].classList.add('active');
+                    cabezasMalas[i].classList.add('active');
+                } else {
+                    lineasMalas[i].classList.remove('active');
+                    cabezasMalas[i].classList.remove('active');
+                }
+            }
+
+            // Manejo de textos informativos en el Header
+            const phaseText = document.getElementById(`phase-${equipo}`);
+            if (puntos <= 15) {
+                phaseText.innerText = `${puntos} Buenas`;
+                phaseText.style.color = "#00ff66";
+            } else {
+                phaseText.innerText = `${puntos - 15} Malas`;
+                phaseText.style.color = "#ff3333";
+            }
+
+            if (puntos === 30) {
+                setTimeout(() => alert(`¡Ganó ${equipo === 'nos' ? 'Nosotros' : 'Ellos'}!`), 50);
+            }
+        }
+
+        function modificarPuntos(equipo, valor) {
+            let nuevoPuntaje = puntajes[equipo] + valor;
+            if (nuevoPuntaje >= 0 && nuevoPuntaje <= 30) {
+                puntajes[equipo] = nuevoPuntaje;
+                actualizarPizarra(equipo);
+            }
+        }
+
+        function reiniciar() {
+            if(confirm("¿Reiniciar partido?")) {
+                puntajes = { nos: 0, ell: 0 };
+                actualizarPizarra('nos');
+                actualizarPizarra('ell');
+            }
+        }
+
+        inicializarTableros();
+        actualizarPizarra('nos');
+        actualizarPizarra('ell');
+    </script>
+</body>
+</html>

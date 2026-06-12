@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Póker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <main class="casino">
+    <section class="mesa-wrap">
+      <div class="jugador-externo jugador-izquierda">
+        <div class="nombre">Computadora 1</div>
+        <div class="dinero-computadora" id="dinero-cpu-1">$5100</div>
+        <div class="fichas">
+          <span class="ficha roja"></span>
+          <span class="ficha azul"></span>
+          <span class="ficha dorada"></span>
+        </div>
+        <div class="cartas cartas-rival" id="cartas-cpu-1"></div>
+      </div>
+
+      <div class="mesa">
+        <div class="zona zona-casa">
+          <div class="nombre">Casa</div>
+          <div class="mazo" id="mazo-casa">♠</div>
+          <div class="estado-casa" id="estado-casa">Crupier listo</div>
+        </div>
+
+        <div class="zona zona-centro">
+          <div class="pozo-box">POT: $<span id="pozo">0</span></div>
+          <div class="fichas fichas-pot">
+            <span class="ficha roja"></span>
+            <span class="ficha azul"></span>
+            <span class="ficha verde"></span>
+            <span class="ficha dorada"></span>
+          </div>
+          <div class="cartas comunitarias" id="cartas-comunitarias"></div>
+        </div>
+
+        <div class="zona zona-jugador">
+          <div class="jugador-ui">
+            <div class="perfil-jugador">
+              <div class="avatar">J</div>
+              <div>
+                <div class="nombre">Jugador</div>
+                <div class="dinero-mini" id="dinero-actual">Tu dinero: $500</div>
+                <div class="apuesta-mini" id="apuesta-actual">Apuesta: $0</div>
+                <div class="deuda-mini" id="deuda-actual">Deuda: $0</div>
+              </div>
+            </div>
+
+            <div class="cartas cartas-jugador" id="cartas-jugador"></div>
+          </div>
+
+          <div class="acciones-jugador">
+            <button id="btn-fold">Fold</button>
+            <button id="btn-check">Check</button>
+            <button id="btn-call">Call</button>
+            <button id="btn-raise">Raise</button>
+            <button id="btn-all-in">All-in</button>
+          </div>
+
+          <div class="resultado" id="resultado">Presiona repartir cartas</div>
+        </div>
+
+        <div class="mensaje-grande" id="mensaje-grande"></div>
+      </div>
+
+      <div class="jugador-externo jugador-derecha">
+        <div class="nombre">Computadora 2</div>
+        <div class="dinero-computadora" id="dinero-cpu-2">$5100</div>
+        <div class="fichas">
+          <span class="ficha roja"></span>
+          <span class="ficha azul"></span>
+          <span class="ficha dorada"></span>
+        </div>
+        <div class="cartas cartas-rival" id="cartas-cpu-2"></div>
+      </div>
+    </section>
+
+    <div class="botones-abajo">
+      <button class="btn-repartir" id="btn-repartir">Repartir Cartas</button>
+      <button class="btn-prestamo" id="btn-prestamo">Pedir préstamo $500</button>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
