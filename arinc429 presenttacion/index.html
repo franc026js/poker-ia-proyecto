@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabina de Instrumentos - ARINC 429</title>
+    <style>
+        /* Estilos generales de la página (Fondo oscuro de cabina) */
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 20px;
+        }
+
+        /* Contenedor principal para albergar múltiples instrumentos */
+        .dashboard {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Contenedor individual de cada instrumento */
+        .instrument-container {
+            background-color: #0b0b0b;
+            border: 4px solid #333333;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Panel de control simulador inferior */
+        .controls {
+            margin-top: 25px;
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Panel de Instrumentos Principal</h1>
+
+    <div class="dashboard">
+
+        <div class="instrument-container">
+            <svg width="300" height="300" viewBox="0 0 300 300">
+                <circle cx="150" cy="150" r="140" fill="#111111" stroke="#444444" stroke-width="3"/>
+                
+                <g stroke="#ffffff" stroke-width="2" fill="none">
+                    </g>
+
+                <text x="150" y="75" fill="#ffffff" font-size="22" font-weight="bold" text-anchor="middle">20</text>
+                <text x="80" y="115" fill="#ffffff" font-size="22" font-weight="bold" text-anchor="middle">10</text>
+                <text x="220" y="115" fill="#ffffff" font-size="22" font-weight="bold" text-anchor="middle">30</text>
+                <text x="90" y="200" fill="#ffffff" font-size="22" font-weight="bold" text-anchor="middle">0</text>
+                <text x="210" y="200" fill="#ffffff" font-size="22" font-weight="bold" text-anchor="middle">40</text>
+                
+                <text x="150" y="115" fill="#ffffff" font-size="14" font-weight="bold" letter-spacing="2" text-anchor="middle">DEGREES</text>
+                <text x="150" y="190" fill="#ffffff" font-size="18" font-weight="bold" letter-spacing="1" text-anchor="middle">FLAPS</text>
+                
+                <g stroke="#ffffff" stroke-width="3" stroke-linecap="round">
+                    <line x1="110" y1="210" x2="120" y2="200" />
+                    <line x1="95" y1="140" x2="110" y2="143" />
+                    <line x1="150" y1="90" x2="150" y2="105" />
+                    <line x1="205" y1="140" x2="190" y2="143" />
+                    <line x1="190" y1="210" x2="180" y2="200" />
+                </g>
+
+                <g stroke="#aaaaaa" stroke-width="1.5">
+                    <line x1="125" y1="110" x2="133" y2="117" />
+                    <line x1="175" y1="110" x2="167" y2="117" />
+                    <line x1="100" y1="173" x2="112" y2="170" />
+                    <line x1="200" y1="173" x2="188" y2="170" />
+                </g>
+
+                <g id="needle" transform="rotate(180 150 150)">
+                    <line x1="150" y1="150" x2="150" y2="40" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+                    <line x1="150" y1="150" x2="150" y2="90" stroke="#222222" stroke-width="6" />
+                    <circle cx="150" cy="150" r="10" fill="#222222" stroke="#444444" stroke-width="2"/>
+                    <circle cx="150" cy="150" r="3" fill="#555555" />
+                </g>
+            </svg>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <label for="flapsInput">Simular Grados Flaps (0° - 40°): </label>
+        <input type="range" id="flapsInput" min="0" max="40" value="0" step="1">
+        <span id="flapsValue">0°</span>
+    </div>
+
+    <script>
+        // Mapeo matemático para la aguja:
+        // Según la distribución del instrumento de la foto:
+        // 0 grados de Flaps equivalen a una rotación de ~220 grados en el círculo.
+        // 40 grados de Flaps equivalen a una rotación de ~140 grados en el círculo.
+        
+        const needle = document.getElementById('needle');
+        const flapsInput = document.getElementById('flapsInput');
+        const flapsValue = document.getElementById('flapsValue');
+
+        function actualizarFlaps(gradosFlaps) {
+            const flaps = Number(gradosFlaps);
+            // Mapeo de la aguja por la parte superior de la escala:
+            // 0 -> 225° (0 en la izquierda abajo)
+            // 10 -> 292.5° (10 arriba a la izquierda)
+            // 20 -> 360° / 0° (20 arriba)
+            // 30 -> 67.5° (30 arriba a la derecha)
+            // 40 -> 135° (40 abajo a la derecha)
+            const anguloRotacion = 225 + (flaps * 6.75);
+            
+            // Aplicar la rotación al elemento SVG de la aguja con pivote en el centro (150, 150)
+            needle.setAttribute('transform', `rotate(${anguloRotacion} 150 150)`);
+            flapsValue.innerText = flaps + "°";
+        }
+
+        // Listener para moverlo en vivo con el deslizador
+        flapsInput.addEventListener('input', (e) => {
+            actualizarFlaps(e.target.value);
+        });
+
+        // Inicializar en 0
+        actualizarFlaps(Number(flapsInput.value));
+    </script>
+</body>
+</html>
